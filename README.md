@@ -1,0 +1,1 @@
+This repository contains scripts in R and python, as well as anonymised data files related to an analysis project of emotion perception in Schizophrenia patients and healthy controls. The experimental results were obtained from a Genetic Algorithm (GA) -inspired facial expression generation task that measures a subject's ideal representation of different target emotions.
