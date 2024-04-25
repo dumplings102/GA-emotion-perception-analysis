@@ -1,0 +1,42 @@
+Blendshape index,Blendshape Name,FACS name
+1,Jaw Open,Jaw drop
+2,Jaw Open - sideway L,Jaw sideways
+3,Jaw Open - sideway R,Jaw sideways
+4,Jaw Forward,Jaw thrust
+5,Jaw Back,NA
+6,Chin Raiser,Chin raiser
+7,Upper Lip suck,Lip suck
+9,Lower Lip suck,Lip suck
+11,Upper Lip tight,Lip Tightener
+13,Lower Lip tight,Lip Tightener
+27,Upper Funneler,Lip Funneler
+29,Lower Funneler,Lip Funneler
+31,Upper Lip Raiser,Upper lip raiser
+33,Nose Wrinkler,Nose wrinkler
+35,Lower lip depressor,Lower lip depressor
+37,Neck tightener,Neck tightener
+39,Upper Lip Stretcher,Nasolabial deepener
+41,Lower Lip Stretcher,Lip stretcher
+43,Narrow Mouth,Lip pucker
+45,Mouth Stretcher,Mouth stretch
+47,Mouth Corner Puller,Lip corner puller
+49,Dimpler,Dimpler
+51,Mouth Corner Depression,Lip corner depressor
+53,Mouth Corner Raiser,Sharp lip puller
+55,Puff Cheek,[Cheek] puff
+57,Puff Lip,[Cheek] blow
+59,Clench,Jaw clencher
+61,Swallow,swallow
+63,Nostril Flare,Nostril dilator
+65,Nostril Pinch,Nostril compressor
+67,Inner Brow Raiser,Inner brow raiser
+69,Outer Brow Raiser,Outer brow raiser
+71,Brow Lowerer,Brow lowerer
+72,pcrs,NA
+73,Squint,Squint
+75,Upper Lid Raiser,Upper lid raiser
+77,Upper Lid Depressor,Lid droop
+79,Lower Lid Raiser,Slit
+81,Lower Lid Depressor,NA
+83,Lower Lid Tightner,Lid tightener
+93,Cheek Raiser,Cheek raiser
