@@ -68,7 +68,7 @@ ccos.raincloud <-
                position = position_dodge(0.3)) +
   stat_dots(side = "left",
             justification = 1.2,
-            binwidth = 0.02,
+            binwidth = 0.015,
             col=NA) +
   scale_fill_manual(name = "Group",
                     values=c("#999999", "#E69F00")) +
@@ -121,7 +121,7 @@ ncos.raincloud <-
                position = position_dodge(0.3)) +
   stat_dots(side = "left",
             justification = 1.2,
-            binwidth = 0.02,
+            binwidth = 0.015,
             col=NA) +
   scale_fill_manual(name = 'Group',
                     values=c("#999999", "#E69F00")) +
