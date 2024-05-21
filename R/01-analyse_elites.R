@@ -32,7 +32,7 @@ extra_df <- read.csv('extra_data/TMS-EEG_additional_data_anita.csv') %>%
   filter(ID %in% sub_list) %>%
   mutate(Age = as.numeric(Age),
          Sex = as.factor(Sex),
-         MCCB.TotalComposite.Tscore = as.numeric(MCCB.TotalComposite.Tscore),
+         #MCCB.TotalComposite.Tscore = as.numeric(MCCB.TotalComposite.Tscore),
          Years.of.education = as.numeric(Years.of.education)) %>%
   janitor::clean_names()
 
@@ -112,3 +112,5 @@ anova(c.lmm, c.two, c.lmm.noid, c.lmm.controls) #AIC for two-way ANOVA is lowest
 ###LMM with education and IQ as controls is better fit than without??
 
 anova(n.lmm)
+
+#########correlation between symptom severity and emotion processing##########

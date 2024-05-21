@@ -30,7 +30,8 @@ nselected_plot <-
                      expand = c(0, 0)) +
   scale_fill_manual(values=c("#999999", "#E69F00")) +
   theme_minimal() +
-  ggtitle("Average number of faces selected per iteration - all emotions") +
+  ggtitle("Average number of faces selected per iteration - all emotions",
+          subtitle = "HC significantly higher than PT (p<.001)") +
   theme(panel.grid = element_blank(),
         panel.background = element_rect(fill = "white",
                                         colour = NA),
@@ -39,9 +40,9 @@ nselected_plot <-
 ggsave('plots/avg_nselected.png', nselected_plot)
 
 nselected_hist <-
-ggplot(nselected_df) +
-  geom_histogram(aes(nSelected,
-                     fill = Group),
+ggplot(nselected_df,
+       aes(nSelected)) +
+  geom_histogram(aes(fill=Group),
                  position = position_dodge(1),
                  binwidth = 1,
                  col = "white") +
@@ -50,7 +51,7 @@ ggplot(nselected_df) +
                      expand = c(0, 0)) +
   scale_fill_manual(values=c("#999999", "#E69F00")) +
   theme_minimal() +
-  ggtitle("Instances of selections = all emotions") +
+  ggtitle("Frequency density of selected faces across all emotions") +
   theme(panel.grid = element_blank(),
         panel.background = element_rect(fill = "white",
                                         colour = NA),
