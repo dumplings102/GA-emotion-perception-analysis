@@ -1,0 +1,11 @@
+,PT_angry,PT_happy,PT_fearful,HC_angry,HC_happy,HC_fearful
+0,rgtUprLipRas,rgtCnrPul,lftInrBrwRas,lftBrwLwr,rgtCnrPul,rgtUprLidRas
+1,rgtUprLidRas,rgtCnrRas,rgtUprLipStr,rgtUprLidRas,lftInrBrwRas,rgtUprLipStr
+2,lftBrwLwr,rgtMthStr,rgtCnrDep,rgtUprLipRas,rgtLwrLidTgt,rgtCnrDep
+3,rgtUprLipStr,lftInrBrwRas,rgtLwrLipStr,rgtUprLipStr,lftUprLipSk,rgtLwrLipStr
+4,rgtLwrLipStr,rgtDmplr,rgtLwrLidTgt,rgtCnrDep,rgtUprLipSk,lftInrBrwRas
+5,rgtLwrLidTgt,rgtChkRas,rgtUprLipRas,rgtLwrLidTgt,rgtCnrRas,rgtSqnt
+6,rgtSqnt,rgtLwrLidRas,rgtLwrLidRas,rgtLwrLipStr,rgtMthStr,lftSqnt
+7,lftSqnt,rgtLwrLipDep,lftBrwLwr,rgtChkRas,rgtSqnt,rgtChkRas
+8,rgtChkRas,rgtLwrLidTgt,rgtUprLidRas,rgtLwrLipTgt,lftSqnt,rgtLwrLipDep
+9,lftOutBrwRas,rgtUprLipSk,lftNstrlPnch,rgtLwrLidRas,rgtLwrLipDep,rgtLwrLidTgt

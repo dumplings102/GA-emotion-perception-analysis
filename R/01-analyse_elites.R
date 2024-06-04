@@ -32,11 +32,11 @@ extra_df <- read.csv('extra_data/TMS-EEG_additional_data_anita.csv') %>%
   filter(ID %in% sub_list) %>%
   mutate(Age = as.numeric(Age),
          Sex = as.factor(Sex),
-         #MCCB.TotalComposite.Tscore = as.numeric(MCCB.TotalComposite.Tscore),
+         wasiiq = as.numeric(WASIIQ),
          Years.of.education = as.numeric(Years.of.education)) %>%
   janitor::clean_names()
 
-#created add extra data and separate by distance measure
+#add extra data and separate by distance measure
 merged_df <- merge(dist_df, extra_df, by = 'id')
 
 c_df <- merged_df %>%
@@ -50,67 +50,74 @@ n_df <- merged_df %>%
 ###control variables added as covariates
 c.one <- aov(distance_score ~ group, c_df) #one-way
 c.two <- aov(distance_score ~ group+target_emotion, c_df) #two-way
-c.int <- aov(distance_score ~ group*target_emotion, c_df) #interaction
+c.int <- aov(distance_score ~ group+target_emotion+group*target_emotion, c_df) #interaction
 c.age <- aov(distance_score ~ group+target_emotion+age, c_df) #control age
-c.sex <- aov(distance_score ~ group+target_emotion+sex, c_df) #control sex
-c.education <- aov(distance_score ~ group+target_emotion+years_of_education,
-                   c_df) #control education level
-c.age_sex_education <- aov(distance_score ~ group+target_emotion+age+sex+
-                             years_of_education, c_df) #control age, sex, education
-aictab(list(c.one, c.two, c.int, c.age, c.sex, c.education, c.age_sex_education),
+c.iq <- aov(distance_score ~ group+target_emotion+wasiiq, c_df) #control sex
+c.edu <- aov(distance_score ~ group+target_emotion+years_of_education, c_df)
+
+aictab(list(c.one, c.two, c.int, c.age, c.iq, c.edu),
        modnames = c('one-way',
                     'two-way',
                     'interaction',
                     'age',
-                    'sex',
-                    'education',
-                    'age+sex+education')) #best fitting model = two-way
+                    'IQ',
+                    'education')) #best fitting model = two-way
 
 #check assumptions
 par(mfrow=c(2,2))
 plot(c.two)
+par(mfrow=c(1,1))
 
 #post-hoc
-summary(c.two)
-tukey.c.two <- TukeyHSD(c.two)
-tukey.c.two
-eta_squared(c.age_sex_education) #effect size, 0.04 - small effect
-
-n.two <- aov(distance_score ~ group+target_emotion, n_df) #two-way neutral model
-plot(n.two) #check assumptions
-par(mfrow=c(1,1))
-summary(n.two)
-tukey.n.two <- TukeyHSD(n.two)
-tukey.n.two
+summary(c.iq)
+TukeyHSD(c.iq)
+eta_squared(c.iq) #effect size, 0.04 - small effect
 
 #linear mixed effects model
-c.lmm.controls <- lmer(distance_score ~ group+target_emotion+
-                         years_of_education+wasiiq+
-                (1|id), c_df) #centroid model with controls
-c.lmm <- lmer(distance_score ~ group+target_emotion+
-                     (1|id), c_df) #centroid model without controls
-c.lmm.noid <- lmer(distance_score ~ group+
-                     (1|target_emotion), c_df) #centroid model with target emo
-                                              ##as random effect instead of id
-
-n.lmm <- lmer(distance_score ~ group+target_emotion+
-                (1|id), n_df) #neutral model
+c.lmm <- lmer(distance_score ~ target_emotion+(1|id), c_df) #distance from centroid
+c.lmm.group <- lmer(distance_score ~ group+target_emotion+(1|id), c_df) #group var
+c.lmm.iq <- lmer(distance_score ~ target_emotion+(1|wasiiq)+(1|id), c_df) #with IQ
 
 #check proportion of variance explained by the model
-r.squaredGLMM(c.lmm, MuMIn.noUpdateWarning = T)
+r.squaredGLMM(c.lmm.iq, MuMIn.noUpdateWarning = T)
 ##R2m (marginal) variance explained by fixed effects
 ###R2c (conditional) variance explained by entire model
 
-plot(c.lmm)
-qqnorm(resid(c.lmm))
-qqline(resid(c.lmm))
-hist(resid(c.lmm))
+plot(c.lmm.iq)
+qqnorm(resid(c.lmm.iq))
+qqline(resid(c.lmm.iq))
+hist(resid(c.lmm.iq))
 
-summary(c.lmm.controls)
-anova(c.lmm, c.two, c.lmm.noid, c.lmm.controls) #AIC for two-way ANOVA is lowest
+summary(c.lmm.iq)
+anova(c.lmm, c.lmm.iq, c.lmm.group) #AIC for control is lowest
 ##is linear mixed model better or two-way ANOVA?
 ###LMM with education and IQ as controls is better fit than without??
 
-anova(n.lmm)
+anova(c.lmm.group)
 
-#########correlation between symptom severity and emotion processing##########
+cdist_r.int <- as.data.frame(ranef(c.lmm)) %>%
+  mutate(group = case_when(str_detect(grp, "S1PT+") ~ "patient",
+                           str_detect(grp, "S1HC+") ~ "control")) %>%
+  mutate(group=as.factor(group))
+
+ggplot(cdist_r.int,
+       aes(x = group, y = condval, fill=group)) +
+  stat_halfeye(adjust = 0.5,
+               justification = -0.2,
+               .width = 0,
+               point_colour = NA,
+               alpha = .5,
+               trim = F,
+               scale = .5) +
+  geom_boxplot(width = 0.12,
+               outlier.color = NA,
+               alpha = 0.5,
+               position = position_dodge(0.2)) +
+  stat_dots(side = "left",
+            justification = 1.15,
+            binwidth = .002,
+            col=NA) +
+  scale_fill_manual(values=c("#999999", "#E69F00"), guide='none') +
+  theme_classic() +
+  ggtitle("Intercepts") +
+  theme(axis.ticks.x = element_blank())

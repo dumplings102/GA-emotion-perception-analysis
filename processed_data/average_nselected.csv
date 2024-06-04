@@ -1,4 +1,5 @@
-Group,TargetEmotion,nGeneration,mean,std,count
+Group,TargetEmotion,nGeneration,nSelected,nSelected,nSelected
+,,,mean,std,count
 HC,Angry,1,2.5714285714285716,0.7464200272921788,21
 HC,Angry,2,3.7142857142857144,1.2705454396776663,21
 HC,Angry,3,4.476190476190476,1.6618979396776332,21
