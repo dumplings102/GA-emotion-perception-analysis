@@ -1,5 +1,7 @@
-##plot symptom severity and random intercepts##
-intercepts_df <- nsel_r.int %>%
+library("ggpubr")
+
+##correlate symptom severity and random intercepts##
+int_df <- nsel_r.int %>%
   filter(group=="patient") %>%
   mutate(id = grp,
          nsel_int = condval) %>%
@@ -11,30 +13,20 @@ intercepts_df <- nsel_r.int %>%
   cbind(cdist_r.int %>%
           filter(group=="patient") %>%
           mutate(cdist_int = condval) %>%
-          select(cdist_int))
+          select(cdist_int)) %>%
+  mutate(across(where(is.integer), as.numeric))
 
-ggplot(intercepts_df,
-       (aes(x=panssn_total, y=cdist_int))) +
-  geom_point() +
-  geom_smooth(method=lm) +
-  ggtitle('r=-0.19') +
-  xlab('symptom severity') +
-  ylab('nSelected intercepts') +
-  theme_classic()
+cor.test(int_df$panssn_total, int_df$cdist_int, method='pearson')
+cor.test(int_df$panssn_total, int_df$nsel_int, method='pearson')
 
-intercepts_df
+#plot
+ggscatter(int_df, x = "panss_total", y = "cdist_int",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "symptom severity", ylab = "distance from centroid")
 
-symptom_severity <- intercepts_df %>%
-  select(panssn_total) %>%
-  unlist()
-
-emotion_percept <- intercepts_df %>%
-  select(cdist_int) %>%
-  unlist()
-
-correlation <- cor(symptom_severity, emotion_percept)
-correlation
-
-regression_model <- lm(emotion_percept ~ symptom_severity)
-summary(regression_model)
+ggscatter(int_df, x = "panss_total", y = "nsel_int",
+          add = "reg.line", conf.int = TRUE,
+          cor.coef = TRUE, cor.method = "pearson",
+          xlab = "symptom severity", ylab = "number of selected faces")
 

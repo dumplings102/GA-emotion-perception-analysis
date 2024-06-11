@@ -36,7 +36,6 @@ r.squaredGLMM(model)
 # Then we run an ANOVA on top
 anova(model)
 
-
 # post hoc comparisons
 emmeans(model, specs = pairwise ~ condition)
 

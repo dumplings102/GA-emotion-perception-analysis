@@ -2,13 +2,13 @@ library('tidyverse')
 #import GA data from preprocessing in python
 nselected_df <- read.csv('processed_data/nselected.csv')
 
-std.error <- function(x) sd(x)/sqrt(length(x))
-
 nselected_sum <- nselected_df %>%
   group_by(Group, nGeneration) %>%
   summarise(mean = mean(nSelected),
             sd = sd(nSelected),
-            se = std.error(nSelected))
+            n = n(),
+            se = sd/sqrt(n),
+            ci = 1.96*se)
 
 nselected_plot <-
   ggplot(nselected_sum,
@@ -18,20 +18,19 @@ nselected_plot <-
     geom_bar(stat = 'identity',
              position = position_dodge(.9)) +
     geom_errorbar(aes(y = mean,
-                      ymin = mean-se,
-                      ymax = mean+se,
+                      ymin = mean-ci,
+                      ymax = mean+ci,
                       group = Group),
                   position = position_dodge(.9),
-                  width = .5,
+                  width = .2,
                   alpha = .5) +
-  scale_x_continuous(#name = "iteration",
+  scale_x_continuous(name = "Iteration",
                      n.breaks = 8) +
-  scale_y_continuous(name = "nSelected",
+  scale_y_continuous(name = "Number of selected faces",
                      expand = c(0, 0)) +
   scale_fill_manual(values=c("#999999", "#E69F00")) +
   theme_minimal() +
-  ggtitle("Average number of faces selected per iteration - all emotions",
-          subtitle = "HC significantly higher than PT (p<.001)") +
+  ggtitle("Average number of faces selected per iteration - all emotions") +
   theme(panel.grid = element_blank(),
         panel.background = element_rect(fill = "white",
                                         colour = NA),

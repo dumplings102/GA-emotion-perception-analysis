@@ -16,37 +16,39 @@ nselected_df <- read.csv('processed_data/nselected.csv') %>%
 str(nselected_df)
 
 #two-way anova of clinical group and iteration on number of selected faces
-aov.twoway <- aov(nSelected ~ Group+nGeneration+Group*nGeneration, nselected_df)
+aov.twoway <- aov(nSelected ~ Group+nGeneration, nselected_df)
 
-plot(aov.twoway) #check assumptions
+#check assumptions
+par(mfrow=c(2,2))
+plot(aov.twoway)
+par(mfrow=c(1,1))
 
 summary(aov.twoway) #check significance
-
 TukeyHSD(aov.twoway) #post-hoc
-
 eta_squared(aov.twoway) #effect size, 0.02 - small effect
 
 #linear mixed effects model for effect of clinical group on number of selected faces
-nsel.lmm1 <- lmer(nSelected ~ Group+nGeneration+TargetEmotion+(1|ID), nselected_df)
 nsel.lmm <- lmer(nSelected ~ nGeneration+TargetEmotion+(1|ID), nselected_df)
-nsel.lmm2 <- lmer(nSelected ~ nGeneration+(1|ID), nselected_df)
-r.squaredGLMM(nsel.lmm1, MuMIn.noUpdateWarning = T)
+nsel.lmm1 <- lmer(nSelected ~ Group+nGeneration+TargetEmotion+(1|ID), nselected_df)
 
-plot(nsel.lmm1)
-qqnorm(resid(nsel.lmm1))
-qqline(resid(nsel.lmm1))
-hist(resid(nsel.lmm1))
+#model selection
+anova(nsel.lmm1, nsel.lmm) #not significantly better, don't include group
 
-summary(nsel.lmm1)
-anova(nsel.lmm1, nsel.lmm, nsel.lmm2)
+r.squaredGLMM(nsel.lmm, MuMIn.noUpdateWarning = T)
+
+plot(nsel.lmm)
+qqnorm(resid(nsel.lmm))
+qqline(resid(nsel.lmm))
+hist(resid(nsel.lmm))
+
+summary(nsel.lmm)
 
 nsel_r.int <- as.data.frame(ranef(nsel.lmm)) %>%
   mutate(group = case_when(str_detect(grp, "S1PT+") ~ "patient",
                            str_detect(grp, "S1HC+") ~ "control")) %>%
   mutate(group=as.factor(group))
 
-#plot intervept values between groups
-plot(nsel_r.int$condval, col=nsel_r.int$group)
+#plot intercept values between groups
 ggplot(nsel_r.int,
        aes(x = group, y = condval, fill=group)) +
   stat_halfeye(adjust = 0.5,

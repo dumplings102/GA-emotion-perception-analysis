@@ -50,52 +50,76 @@ n_df <- merged_df %>%
 ###control variables added as covariates
 c.one <- aov(distance_score ~ group, c_df) #one-way
 c.two <- aov(distance_score ~ group+target_emotion, c_df) #two-way
-c.int <- aov(distance_score ~ group+target_emotion+group*target_emotion, c_df) #interaction
 c.age <- aov(distance_score ~ group+target_emotion+age, c_df) #control age
 c.iq <- aov(distance_score ~ group+target_emotion+wasiiq, c_df) #control sex
 c.edu <- aov(distance_score ~ group+target_emotion+years_of_education, c_df)
 
-aictab(list(c.one, c.two, c.int, c.age, c.iq, c.edu),
+aictab(list(c.one, c.two, c.age, c.iq, c.edu),
        modnames = c('one-way',
                     'two-way',
-                    'interaction',
                     'age',
                     'IQ',
-                    'education')) #best fitting model = two-way
+                    'education')) #best fitting model = iq
 
 #check assumptions
 par(mfrow=c(2,2))
 plot(c.two)
 par(mfrow=c(1,1))
 
+#model selection
+anova(c.two, c.iq)
+summary(c.iq)
+
 #post-hoc
 summary(c.iq)
 TukeyHSD(c.iq)
 eta_squared(c.iq) #effect size, 0.04 - small effect
 
+#ANOVA
+##the effect of clinical group & target emotion on distance measure
+###control variables added as covariates
+n.one <- aov(distance_score ~ group, n_df) #one-way
+n.two <- aov(distance_score ~ group+target_emotion, n_df) #two-way
+n.age <- aov(distance_score ~ group+target_emotion+age, n_df) #control age
+n.iq <- aov(distance_score ~ group+target_emotion+wasiiq, n_df) #control sex
+n.edu <- aov(distance_score ~ group+target_emotion+years_of_education, n_df)
+
+aictab(list(n.one, n.two, n.age, n.iq, n.edu),
+       modnames = c('one-way',
+                    'two-way',
+                    'age',
+                    'IQ',
+                    'education')) #best fitting model = age
+
+#check assumptions
+par(mfrow=c(2,2))
+plot(c.two)
+par(mfrow=c(1,1))
+
+#model selection
+anova(n.two, n.age)
+summary(n.two)
+
 #linear mixed effects model
 c.lmm <- lmer(distance_score ~ target_emotion+(1|id), c_df) #distance from centroid
 c.lmm.group <- lmer(distance_score ~ group+target_emotion+(1|id), c_df) #group var
-c.lmm.iq <- lmer(distance_score ~ target_emotion+(1|wasiiq)+(1|id), c_df) #with IQ
-
 #check proportion of variance explained by the model
-r.squaredGLMM(c.lmm.iq, MuMIn.noUpdateWarning = T)
+r.squaredGLMM(c.lmm, MuMIn.noUpdateWarning = T)
 ##R2m (marginal) variance explained by fixed effects
 ###R2c (conditional) variance explained by entire model
 
-plot(c.lmm.iq)
-qqnorm(resid(c.lmm.iq))
-qqline(resid(c.lmm.iq))
-hist(resid(c.lmm.iq))
+#model selection
+anova(c.lmm, c.lmm.group) #LMM with group has significantly better fit
+summary(c.lmm)
 
-summary(c.lmm.iq)
-anova(c.lmm, c.lmm.iq, c.lmm.group) #AIC for control is lowest
-##is linear mixed model better or two-way ANOVA?
-###LMM with education and IQ as controls is better fit than without??
+#assumptions
+plot(c.lmm.group)
+qqnorm(resid(c.lmm.group))
+qqline(resid(c.lmm.group))
+hist(resid(c.lmm.group))
 
-anova(c.lmm.group)
-
-cdist_r.int <- as.data.frame(ranef(c.lmm)) %>%
+#extract conditional means from random effects
+cdist_r.int <- as.data.frame(ranef(c.lmm.group)) %>%
   mutate(group = case_when(str_detect(grp, "S1PT+") ~ "patient",
                            str_detect(grp, "S1HC+") ~ "control")) %>%
   mutate(group=as.factor(group))

@@ -44,15 +44,14 @@ iter_plot <-
   scale_color_manual(values=c("#999999", "#E69F00")) +
   scale_fill_manual(values=c("#999999", "#E69F00")) +
   scale_shape(labels=c('Non-selected', 'Selected')) +
-  #scale_x_continuous(n.breaks = 0) +
-  ylab("Cosine Distance") +
-  xlab("Interation Number") +
+  ylab("Cosine distance") +
+  xlab("Interation") +
   guides(col='none',
          fill=guide_legend(override.aes = list(alpha = 1)),
          shape=guide_legend(reverse=T)) +
   theme_classic() +
   theme(axis.ticks.x=element_blank(), axis.text.x=element_blank()) +
-  labs(title = "Distance from centroid of selected and nonselected faces",
+  labs(title = "Distance from centroid of selected and non-selected faces",
        fill = "",
        shape = "")
 
