@@ -20,13 +20,17 @@ cor.test(int_df$panssn_total, int_df$cdist_int, method='pearson')
 cor.test(int_df$panssn_total, int_df$nsel_int, method='pearson')
 
 #plot
-ggscatter(int_df, x = "panss_total", y = "cdist_int",
+h <- ggscatter(int_df, x = "panss_total", y = "cdist_int",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "pearson",
           xlab = "symptom severity", ylab = "distance from centroid")
+ggsave('plots/correlate_distance.png',
+       h, width=5, height=4, dpi=300)
 
-ggscatter(int_df, x = "panss_total", y = "nsel_int",
+j <- ggscatter(int_df, x = "panss_total", y = "nsel_int",
           add = "reg.line", conf.int = TRUE,
           cor.coef = TRUE, cor.method = "pearson",
           xlab = "symptom severity", ylab = "number of selected faces")
+ggsave('plots/correlate_nselect.png',
+       j, width=5, height=4, dpi=300)
 
