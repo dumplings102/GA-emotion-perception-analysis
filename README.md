@@ -2,4 +2,4 @@ This repository contains scripts in R and python, as well as anonymised data fil
 
 - Two jupyter notebook files ending in ".ipynb" were used for processing, analysis and visualisation of GA results.
 - R scripts located in the "R" folder were used for inferential statistics and plotting.
-- A csv file called "TMS-EEG_additional_data.csv" in the "extra_data" folder has been removed from github due to the sensitive nature of the information. It contains 22 columns, with 21 variables composed of demographic and clinical information regarding the subjects as referenced by their id in column 1.
+- A csv file called "TMS-EEG_additional_data.csv" in the "extra_data" folder has been removed from github due to the sensitive nature of the information. It contains 22 columns, with 21 variables composed of demographic and clinical information regarding the subjects as referenced by their ID in column 1.
