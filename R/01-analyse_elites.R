@@ -2,7 +2,6 @@
 library(tidyverse)
 library(lme4)
 library(lmerTest)
-library(emmeans)
 library(MuMIn)
 library(AICcmodavg)
 library(ggpubr)
@@ -48,15 +47,13 @@ n_df <- merged_df %>%
 #ANOVA
 ##the effect of clinical group & target emotion on distance measure
 ###control variables added as covariates
-c.one <- aov(distance_score ~ group, c_df) #one-way
-c.two <- aov(distance_score ~ group+target_emotion, c_df) #two-way
-c.age <- aov(distance_score ~ group+target_emotion+age, c_df) #control age
-c.iq <- aov(distance_score ~ group+target_emotion+wasiiq, c_df) #control sex
-c.edu <- aov(distance_score ~ group+target_emotion+years_of_education, c_df)
+c.two <- aov(distance_score ~ group+target_emotion+group*target_emotion, c_df) #two-way
+c.age <- aov(distance_score ~ group+target_emotion+group*target_emotion+age, c_df) #control age
+c.iq <- aov(distance_score ~ group+target_emotion+group*target_emotion+wasiiq, c_df) #control sex
+c.edu <- aov(distance_score ~ group+target_emotion+group*target_emotion+years_of_education, c_df)
 
-aictab(list(c.one, c.two, c.age, c.iq, c.edu),
-       modnames = c('one-way',
-                    'two-way',
+aictab(list(c.two, c.age, c.iq, c.edu),
+       modnames = c('two-way',
                     'age',
                     'IQ',
                     'education')) #best fitting model = iq
@@ -71,34 +68,30 @@ anova(c.two, c.iq)
 summary(c.iq)
 
 #post-hoc
-summary(c.iq)
-TukeyHSD(c.iq)
-eta_squared(c.iq) #effect size, 0.04 - small effect
+emmeans(c.two, pairwise~group|target_emotion, adjust='Tukey')
 
 #ANOVA
 ##the effect of clinical group & target emotion on distance measure
 ###control variables added as covariates
-n.one <- aov(distance_score ~ group, n_df) #one-way
-n.two <- aov(distance_score ~ group+target_emotion, n_df) #two-way
-n.age <- aov(distance_score ~ group+target_emotion+age, n_df) #control age
-n.iq <- aov(distance_score ~ group+target_emotion+wasiiq, n_df) #control sex
-n.edu <- aov(distance_score ~ group+target_emotion+years_of_education, n_df)
+n.two <- aov(distance_score ~ group+target_emotion+group*target_emotion, n_df) #two-way
+n.age <- aov(distance_score ~ group+target_emotion+group*target_emotion+age, n_df) #control age
+n.iq <- aov(distance_score ~ group+target_emotion+group*target_emotion+wasiiq, n_df) #control sex
+n.edu <- aov(distance_score ~ group+target_emotion+group*target_emotion+years_of_education, n_df)
 
-aictab(list(n.one, n.two, n.age, n.iq, n.edu),
-       modnames = c('one-way',
-                    'two-way',
+aictab(list(n.two, n.age, n.iq, n.edu),
+       modnames = c('two-way',
                     'age',
                     'IQ',
                     'education')) #best fitting model = age
 
 #check assumptions
 par(mfrow=c(2,2))
-plot(c.two)
+plot(n.two)
 par(mfrow=c(1,1))
 
 #model selection
 anova(n.two, n.age)
-summary(n.two)
+summary(n.age)
 
 #linear mixed effects model
 c.lmm <- lmer(distance_score ~ target_emotion+(1|id), c_df) #distance from centroid

@@ -45,7 +45,7 @@ iter_plot <-
   scale_fill_manual(values=c("#999999", "#E69F00")) +
   scale_shape(labels=c('Non-selected', 'Selected')) +
   ylab("Cosine distance") +
-  xlab("Interation") +
+  xlab("Trial number") +
   guides(col='none',
          fill=guide_legend(override.aes = list(alpha = 1)),
          shape=guide_legend(reverse=T)) +
@@ -56,4 +56,5 @@ iter_plot <-
        shape = "")
 
 ggsave('plots/selected_nonselected.png',
-       iter_plot)
+       iter_plot, width=8, height=5, dpi=300)
+

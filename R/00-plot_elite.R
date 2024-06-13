@@ -82,7 +82,7 @@ ccos.raincloud <-
   ggtitle("Variability of elite faces (N=42)")
 
 ggsave('plots/centroid_violin.png', ccos.plot)
-ggsave('plots/centroid_raincloud.png', ccos.raincloud)
+ggsave('plots/centroid_raincloud.png', ccos.raincloud, width=5, height=4, dpi=300)
 
 #visualise average cosine distance from neutral
 ncos.plot <-
@@ -136,5 +136,5 @@ ncos.raincloud <-
         plot.background = element_rect(fill = "white"))
 
 ggsave('plots/neutral_violin.png', ncos.plot)
-ggsave('plots/neutral_raincloud.png', ncos.raincloud)
+ggsave('plots/neutral_raincloud.png', ncos.raincloud, width=5, height=4,dpi=300)
 
