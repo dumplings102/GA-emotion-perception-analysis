@@ -1,11 +1,9 @@
 #load packages
 library(tidyverse)
-library(lme4)
-library(lmerTest)
-library(MuMIn)
 library(AICcmodavg)
 library(ggpubr)
 library(effectsize)
+library(rstatix)
 
 #import distance data and separate by distance measure
 dist_df <- read.csv('processed_data/all_elite_distances.csv') %>%
@@ -47,25 +45,32 @@ n_df <- merged_df %>%
 #ANOVA
 ##the effect of clinical group & target emotion on distance measure
 ###control variables added as covariates
-c.two <- aov(distance_score ~ group+target_emotion+group*target_emotion, c_df) #two-way
-c.age <- aov(distance_score ~ group+target_emotion+group*target_emotion+age, c_df) #control age
-c.iq <- aov(distance_score ~ group+target_emotion+group*target_emotion+wasiiq, c_df) #control sex
-c.edu <- aov(distance_score ~ group+target_emotion+group*target_emotion+years_of_education, c_df)
+c.two <- aov(distance_score ~ group+target_emotion+group*target_emotion,
+             c_df) #two-way
+c.age <- aov(distance_score ~ group+target_emotion+group*target_emotion+age,
+             c_df) #control age
+c.edu <- aov(distance_score ~ group+target_emotion+group*target_emotion+years_of_education,
+             c_df) #control years of education
+c.sex <- aov(distance_score ~ group+target_emotion+group*target_emotion+sex,
+             c_df) #control sex
 
-aictab(list(c.two, c.age, c.iq, c.edu),
+aictab(list(c.two, c.age, c.sex, c.edu),
        modnames = c('two-way',
                     'age',
-                    'IQ',
-                    'education')) #best fitting model = iq
+                    'sex',
+                    'education')) #best fitting model = two-way ANOVA
+
+#model selection
+anova(c.two, c.age)
 
 #check assumptions
 par(mfrow=c(2,2))
 plot(c.two)
 par(mfrow=c(1,1))
 
-#model selection
-anova(c.two, c.iq)
-summary(c.iq)
+#signifiance and effect size
+summary(c.two)
+eta_squared(c.two)
 
 #post-hoc
 emmeans(c.two, pairwise~group|target_emotion, adjust='Tukey')
@@ -75,66 +80,51 @@ emmeans(c.two, pairwise~group|target_emotion, adjust='Tukey')
 ###control variables added as covariates
 n.two <- aov(distance_score ~ group+target_emotion+group*target_emotion, n_df) #two-way
 n.age <- aov(distance_score ~ group+target_emotion+group*target_emotion+age, n_df) #control age
-n.iq <- aov(distance_score ~ group+target_emotion+group*target_emotion+wasiiq, n_df) #control sex
+n.sex <- aov(distance_score ~ group+target_emotion+group*target_emotion+sex, n_df) #control sex
 n.edu <- aov(distance_score ~ group+target_emotion+group*target_emotion+years_of_education, n_df)
 
-aictab(list(n.two, n.age, n.iq, n.edu),
+
+aictab(list(n.two, n.age, n.sex, n.edu),
        modnames = c('two-way',
                     'age',
-                    'IQ',
+                    'sex',
                     'education')) #best fitting model = age
-
-#check assumptions
-par(mfrow=c(2,2))
-plot(n.two)
-par(mfrow=c(1,1))
 
 #model selection
 anova(n.two, n.age)
-summary(n.age)
 
-#linear mixed effects model
-c.lmm <- lmer(distance_score ~ target_emotion+(1|id), c_df) #distance from centroid
-c.lmm.group <- lmer(distance_score ~ group+target_emotion+(1|id), c_df) #group var
-#check proportion of variance explained by the model
-r.squaredGLMM(c.lmm, MuMIn.noUpdateWarning = T)
-##R2m (marginal) variance explained by fixed effects
-###R2c (conditional) variance explained by entire model
+###check assumptions
+#Linearity
+ggscatter(
+  n_df, x = "age", y = "distance_score",
+  facet.by  = c("group", "target_emotion"),
+  short.panel.labs = FALSE
+)+
+  stat_smooth(method = "loess", span = 0.9)
 
-#model selection
-anova(c.lmm, c.lmm.group) #LMM with group has significantly better fit
-summary(c.lmm)
+#Homogeneity of regression slopes
+n_df %>%
+  anova_test(
+    distance_score ~ age + group + target_emotion +
+      group*target_emotion + age*group +
+      age*target_emotion + age*group*target_emotion
+  )
 
-#assumptions
-plot(c.lmm.group)
-qqnorm(resid(c.lmm.group))
-qqline(resid(c.lmm.group))
-hist(resid(c.lmm.group))
+#Normality of residuals
+model <- lm(distance_score ~ age + group*target_emotion, data = n_df)
+model.metrics <- augment(model)
+shapiro.test(model.metrics$.resid)
 
-#extract conditional means from random effects
-cdist_r.int <- as.data.frame(ranef(c.lmm.group)) %>%
-  mutate(group = case_when(str_detect(grp, "S1PT+") ~ "patient",
-                           str_detect(grp, "S1HC+") ~ "control")) %>%
-  mutate(group=as.factor(group))
+#Homogeneity of variances
+levene_test(.resid ~ group*target_emotion, data = model.metrics)
 
-ggplot(cdist_r.int,
-       aes(x = group, y = condval, fill=group)) +
-  stat_halfeye(adjust = 0.5,
-               justification = -0.2,
-               .width = 0,
-               point_colour = NA,
-               alpha = .5,
-               trim = F,
-               scale = .5) +
-  geom_boxplot(width = 0.12,
-               outlier.color = NA,
-               alpha = 0.5,
-               position = position_dodge(0.2)) +
-  stat_dots(side = "left",
-            justification = 1.15,
-            binwidth = .002,
-            col=NA) +
-  scale_fill_manual(values=c("#999999", "#E69F00"), guide='none') +
-  theme_classic() +
-  ggtitle("Intercepts") +
-  theme(axis.ticks.x = element_blank())
+#Outliers
+model.metrics %>%
+  filter(abs(.std.resid) > 3) %>%
+  as.data.frame()
+
+#signifiance and effect size
+summary(n.two)
+eta_squared(n.two)
+
+#no post-hoc because non-significant
