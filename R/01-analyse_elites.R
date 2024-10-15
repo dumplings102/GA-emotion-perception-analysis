@@ -1,9 +1,11 @@
 #load packages
 library(tidyverse)
 library(AICcmodavg)
+library(lme4)
 library(ggpubr)
 library(effectsize)
 library(rstatix)
+library(MASS)
 
 #import distance data and separate by distance measure
 dist_df <- read.csv('processed_data/all_elite_distances.csv') %>%
@@ -36,95 +38,118 @@ extra_df <- read.csv('extra_data/TMS-EEG_additional_data_anita.csv') %>%
 #add extra data and separate by distance measure
 merged_df <- merge(dist_df, extra_df, by = 'id')
 
-c_df <- merged_df %>%
+cc_df <- dist_df %>%
   filter(distance_measure == 'Centroid_cosine_distance')
 
-n_df <- merged_df %>%
+nc_df <- dist_df %>%
   filter(distance_measure == 'Neutral_cosine_distance')
 
 #ANOVA
-##the effect of clinical group & target emotion on distance measure
-###control variables added as covariates
-c.two <- aov(distance_score ~ group+target_emotion+group*target_emotion,
-             c_df) #two-way
-c.age <- aov(distance_score ~ group+target_emotion+group*target_emotion+age,
-             c_df) #control age
-c.edu <- aov(distance_score ~ group+target_emotion+group*target_emotion+years_of_education,
-             c_df) #control years of education
-c.sex <- aov(distance_score ~ group+target_emotion+group*target_emotion+sex,
-             c_df) #control sex
+ggboxplot(cc_df,
+          x = "target_emotion", y = "distance_score", color = "group", palette='jco')
 
-aictab(list(c.two, c.age, c.sex, c.edu),
-       modnames = c('two-way',
-                    'age',
-                    'sex',
-                    'education')) #best fitting model = two-way ANOVA
+outliers <- cc_df %>%
+  group_by(group, target_emotion) %>%
+  identify_outliers(distance_score) %>%
+  filter(is.outlier)
 
-#model selection
-anova(c.two, c.age)
+cc_df <- cc_df %>%
+  anti_join(outliers)
 
-#check assumptions
-par(mfrow=c(2,2))
-plot(c.two)
-par(mfrow=c(1,1))
+#normality assumption
+cc_df %>%
+  group_by(group, target_emotion) %>%
+  shapiro_test(distance_score)
 
-#signifiance and effect size
-summary(c.two)
-eta_squared(c.two)
+ggqqplot(cc_df, "distance_score", ggtheme = theme_bw()) +
+  facet_grid(group ~ target_emotion)
 
-#post-hoc
-emmeans(c.two, pairwise~group|target_emotion, adjust='Tukey')
+#homogeneity of variance assumption
+cc_df %>%
+  group_by(target_emotion) %>%
+  levene_test(distance_score ~ group)
 
-#ANOVA
-##the effect of clinical group & target emotion on distance measure
-###control variables added as covariates
-n.two <- aov(distance_score ~ group+target_emotion+group*target_emotion, n_df) #two-way
-n.age <- aov(distance_score ~ group+target_emotion+group*target_emotion+age, n_df) #control age
-n.sex <- aov(distance_score ~ group+target_emotion+group*target_emotion+sex, n_df) #control sex
-n.edu <- aov(distance_score ~ group+target_emotion+group*target_emotion+years_of_education, n_df)
+#homogeneity of covariances assumption
+box_m(cc_df[, "distance_score", drop = F], cc_df$group)
 
+#sphericity assumption assessed using Mauchly's test in anova_test function
+#perform mixed anova
+cc.aov <- anova_test(
+  data = cc_df, dv = distance_score, wid = id,
+  between = group, within = target_emotion, type = 2
+)
 
-aictab(list(n.two, n.age, n.sex, n.edu),
-       modnames = c('two-way',
-                    'age',
-                    'sex',
-                    'education')) #best fitting model = age
+summary(aov(distance_score~group+target_emotion+group*target_emotion, cc_df))
 
-#model selection
-anova(n.two, n.age)
+#Greenhouse-Geisser sphericity correction applied to factors violating assumption
+get_anova_table(cc.aov)
 
-###check assumptions
-#Linearity
-ggscatter(
-  n_df, x = "age", y = "distance_score",
-  facet.by  = c("group", "target_emotion"),
-  short.panel.labs = FALSE
-)+
-  stat_smooth(method = "loess", span = 0.9)
+summary(lm(distance_score ~ group, cc_df))
 
-#Homogeneity of regression slopes
-n_df %>%
-  anova_test(
-    distance_score ~ age + group + target_emotion +
-      group*target_emotion + age*group +
-      age*target_emotion + age*group*target_emotion
+ggplot(cc_df, aes(x = group,
+                  y = distance_score,
+                  group = target_emotion, col = target_emotion)) +
+  geom_point() + stat_summary(fun = mean, geom = "line") + theme_bw()
+
+cc_df %>%
+  pairwise_t_test(
+    distance_score ~ target_emotion, paired = F,
+    p.adjust.method = "bonferroni"
   )
 
-#Normality of residuals
-model <- lm(distance_score ~ age + group*target_emotion, data = n_df)
-model.metrics <- augment(model)
-shapiro.test(model.metrics$.resid)
+cc_df %>%
+  pairwise_t_test(
+    distance_score ~ group, paired = F,
+    p.adjust.method = "bonferroni"
+  )
 
-#Homogeneity of variances
-levene_test(.resid ~ group*target_emotion, data = model.metrics)
 
-#Outliers
-model.metrics %>%
-  filter(abs(.std.resid) > 3) %>%
-  as.data.frame()
+#ANOVA
+ggboxplot(nc_df,
+          x = "target_emotion", y = "distance_score", color = "group", palette='jco')
 
-#signifiance and effect size
-summary(n.two)
-eta_squared(n.two)
+outliers <- nc_df %>%
+  group_by(group, target_emotion) %>%
+  identify_outliers(distance_score) %>%
+  filter(is.outlier)
 
-#no post-hoc because non-significant
+nc_df <- nc_df %>%
+  anti_join(outliers)
+
+nc_df %>%
+  group_by(group, target_emotion) %>%
+  shapiro_test(distance_score)
+
+ggqqplot(nc_df, "distance_score", ggtheme = theme_bw()) +
+  facet_grid(group ~ target_emotion)
+
+nc_df %>%
+  group_by(target_emotion) %>%
+  levene_test(distance_score ~ group)
+
+#transformed_dist <- boxcox(distance_score~group, data=nc_df)
+
+#b=boxcox(distance_score~group, data=nc_df)
+#lambda <- b$x[which.max(b$y)]
+
+#nc_df$transformed_dist <- (nc_df$distance_score^lambda-1)/lambda
+
+box_m(nc_df[, "distance_score", drop = F], nc_df$group)
+
+nc.aov <- anova_test(
+  data = nc_df, dv = distance_score, wid = id,
+  between = group, within = target_emotion
+)
+get_anova_table(nc.aov)
+
+nc_df %>%
+    pairwise_t_test(
+      distance_score ~ target_emotion, paired = F,
+      p.adjust.method = "bonferroni"
+    )
+
+cc_df %>%
+  pairwise_t_test(
+    distance_score ~ target_emotion, paired = FALSE,
+    p.adjust.method = "bonferroni"
+  )

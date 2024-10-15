@@ -1,6 +1,5 @@
 #load packages
 library(tidyverse)
-library(ggdist)
 
 #import distance data and separate by distance measure
 dist_df <- read.csv('processed_data/all_elite_distances.csv') %>%
@@ -30,6 +29,7 @@ data_summary <- function(x) {
 check <- dist_df %>%
   group_by(group, id) %>%
   summarise(n = n()) #count=6 bc 2 distance measures per emotion (2 x 3 = 6)
+#patient 15 only has 4 - missing fearful trial
 
 #visualise average cosine distance from centroid
 ccos.plot <-
@@ -49,7 +49,8 @@ ccos.plot <-
         panel.background = element_rect(fill = "white",
                                         colour = NA),
         plot.background = element_rect(fill = "white")) +
-  ggtitle("Cosine distance from centroid of elite faces (N=42)")
+  ggtitle("Cosine distance from centroid of elite faces (N=47)")
+
 
 ccos.raincloud <-
   ggplot(dist_df %>%
@@ -79,7 +80,7 @@ ccos.raincloud <-
   theme(panel.grid = element_blank(),
         panel.background = element_rect(fill = "white", colour = NA),
         plot.background = element_rect(fill = "white")) +
-  ggtitle("Variability of elite faces (N=42)")
+  ggtitle("Variability of elite faces (N=47)")
 
 ggsave('plots/centroid_violin.png', ccos.plot)
 ggsave('plots/centroid_raincloud.png', ccos.raincloud, width=5, height=4, dpi=300)
@@ -101,7 +102,7 @@ ncos.plot <-
   scale_x_discrete(name = 'Target Emotion',
                    labels = c('Anger', 'Fear', 'Happiness')) +
   theme_classic() +
-  ggtitle("Cosine distance from neutral of elite faces (N=42)") +
+  ggtitle("Cosine distance from neutral of elite faces (N=47)") +
   theme(axis.ticks.x = element_blank())
 
 ncos.raincloud <-
@@ -128,7 +129,7 @@ ncos.raincloud <-
   scale_y_continuous(name = "Cosine Distance From Neutral") +
   scale_x_discrete(name = 'Target Emotion',
                    labels = c('Anger', 'Fear', 'Happiness')) +
-  ggtitle("Intensity of elite faces (N=42)") +
+  ggtitle("Intensity of elite faces (N=47)") +
   theme_minimal() +
   theme(panel.grid = element_blank(),
         panel.background = element_rect(fill = "white",
