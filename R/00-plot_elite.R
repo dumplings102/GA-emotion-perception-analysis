@@ -1,5 +1,6 @@
 #load packages
 library(tidyverse)
+library(ggdist)
 
 #import distance data and separate by distance measure
 dist_df <- read.csv('processed_data/all_elite_distances.csv') %>%
@@ -7,7 +8,9 @@ dist_df <- read.csv('processed_data/all_elite_distances.csv') %>%
          TargetEmotion,
          Group,
          Neutral_cosine_distance,
-         Centroid_cosine_distance) %>%
+         Centroid_cosine_distance,
+         Neutral_cosine_bs_distance,
+         Centroid_cosine_bs_distance) %>%
   pivot_longer(cols = ends_with('distance'),
                names_to = 'distance_measure',
                values_to = 'distance_score') %>%
@@ -28,13 +31,15 @@ data_summary <- function(x) {
 #check subject number in each condition
 check <- dist_df %>%
   group_by(group, id) %>%
-  summarise(n = n()) #count=6 bc 2 distance measures per emotion (2 x 3 = 6)
-#patient 15 only has 4 - missing fearful trial
+  summarise(n = n()) #count=12 because 2 distance measures per emotion (4 x 3 = 12)
+#PT15 is missing fearful trials
+count(check %>%
+        filter(group == 'PT'))
 
 #visualise average cosine distance from centroid
 ccos.plot <-
   ggplot(dist_df %>%
-           filter(distance_measure=='Centroid_cosine_distance'),
+           filter(distance_measure=='Centroid_cosine_bs_distance'),
          aes(x = target_emotion, y = distance_score, fill = group)) +
   geom_violin(col = NA, alpha = .5) +
   stat_summary(fun.data = data_summary,
@@ -54,7 +59,7 @@ ccos.plot <-
 
 ccos.raincloud <-
   ggplot(dist_df %>%
-           filter(distance_measure=='Centroid_cosine_distance'),
+           filter(distance_measure=='Centroid_cosine_bs_distance'),
          aes(x = target_emotion, y = distance_score, fill = group)) +
   stat_halfeye(adjust = 0.5,
                justification = -0.3,
@@ -88,7 +93,7 @@ ggsave('plots/centroid_raincloud.png', ccos.raincloud, width=5, height=4, dpi=30
 #visualise average cosine distance from neutral
 ncos.plot <-
   ggplot(dist_df %>%
-           filter(distance_measure=='Neutral_cosine_distance'),
+           filter(distance_measure=='Neutral_cosine_bs_distance'),
          aes(x = target_emotion,
              y = distance_score,
              fill = group)) +
@@ -107,7 +112,7 @@ ncos.plot <-
 
 ncos.raincloud <-
   ggplot(dist_df %>%
-           filter(distance_measure=='Neutral_cosine_distance'),
+           filter(distance_measure=='Neutral_cosine_bs_distance'),
          aes(x = target_emotion, y = distance_score, fill = group)) +
   stat_halfeye(adjust = 0.5,
                justification = -0.35,
@@ -122,7 +127,7 @@ ncos.raincloud <-
                position = position_dodge(0.3)) +
   stat_dots(side = "left",
             justification = 1.2,
-            binwidth = 0.015,
+            binwidth = 0.005,
             col=NA) +
   scale_fill_manual(name = 'Group',
                     values=c("#999999", "#E69F00")) +
